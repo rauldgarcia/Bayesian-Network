@@ -4,15 +4,15 @@ import math
 import time
 from itertools import combinations
 import pyAgrum as gum
-import pyAgrum.lib.notebook as gnb
+#import pyAgrum.lib.notebook as gnb
 inicio=time.time()
 
 data=pd.read_csv('discretizadairis.csv')
 print(data)
 print(data.dtypes)
 lendata=len(data)
-nombres=data.columns.values 
-names=np.delete(nombres,-1) #eliminar esta linea y cambiar nombres a names si se utiliza la clase
+names=data.columns.values 
+#names=np.delete(nombres,-1) #eliminar esta linea y cambiar nombres a names si se utiliza la clase
 print(names)
 natributos=len(names)
 print(natributos)
@@ -118,11 +118,13 @@ for combinacion in combinaciones:
             t=2*lendata*i
             if t < 5.991:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-                bn.eraseArc(combinacion[0],combinacion[1])
+                if bn.existsArc(combinacion[0],combinacion[1]):
+                    bn.eraseArc(combinacion[0],combinacion[1])
                 combinacioneseliminadas.append(combinacion)
             elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
                 print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-                bn.addArc(combinacion[0],combinacion[1])
+                if not bn.existsArc(combinacion[0],combinacion[1]):
+                    bn.addArc(combinacion[0],combinacion[1])
                 combinaciones3.append(combinacion)
                 atributos2.append(combinacion[0])
                 atributos2.append(combinacion[1])
@@ -143,14 +145,18 @@ for combinacion in combinaciones3:
             t=2*lendata*i
             if t < 7.815:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-                bn.addArc(combinacion[0],combinacion[1])
+                if bn.existsArc(combinacion[0],combinacion[1]):
+                    bn.eraseArc(combinacion[0],combinacion[1])
                 combinacioneseliminadas.append(combinacion)
             elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
                 print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-                bn.addArc(combinacion[0],combinacion[1])
+                if not bn.existsArc(combinacion[0],combinacion[1]):
+                    bn.addArc(combinacion[0],combinacion[1])
+                
             #else: # si no hay que desconectar o reconectar solo lo agrega a la lista
+#import pyAgrum.lib.notebook
+#bn
 
-print(bn)            
 print("\nEl tiempo de ejecución es:")
 fin=time.time()
 print(fin-inicio)
