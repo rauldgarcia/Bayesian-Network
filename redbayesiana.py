@@ -3,8 +3,8 @@ import pandas as pd
 import math
 import time
 from itertools import combinations
-from sklearn.metrics import mutual_info_score
-import copy
+import pyAgrum as gum
+import pyAgrum.lib.notebook as gnb
 inicio=time.time()
 
 data=pd.read_csv('discretizadairis.csv')
@@ -18,22 +18,21 @@ natributos=len(names)
 print(natributos)
 print()
 
-"""def mutual_info(a,b):
+bn=gum.BayesNet()
+for name in names: #agrega cada atributo a la red bayesiana y especifica el numero de valores que toma ese atributo
+    tamaño=len(list(set(list(data[name]))))
+    name=bn.add(gum.LabelizedVariable(name,name+'1',tamaño))
+
+print(bn)
+def mutual_info(a,b):
     va=list(set(list(data[a])))
     vb=list(set(list(data[b])))
     i=0
     for x in va:
         for y in vb:
-                countxy=0
-                countx=0
-                county=0
-                for ejemplo in range(lendata):
-                    if (data[names[a]][ejemplo]==x) and (data[names[b]][ejemplo]==y):
-                        countxy+=1
-                    if data[names[a]][ejemplo]==x:
-                        countx+=1
-                    if data[names[b]][ejemplo]==y:
-                        county+=1  
+                countxy=((data[a]==x) & (data[b]==y)).sum()
+                countx=(data[a]==x).sum()
+                county=(data[b]==y).sum()
                 pxy=countxy/lendata
                 px=countx/lendata
                 py=county/lendata    
@@ -41,7 +40,7 @@ print()
                     aux=pxy/(px*py)
                     xy=pxy*math.log(aux)
                     i+=xy
-    return i"""
+    return i
 
 def conditional_mutual_info(a,b,c):
     va=list(set(list(data[a])))
@@ -51,25 +50,14 @@ def conditional_mutual_info(a,b,c):
     for x in va:
         for y in vb:
             for z in vc:
-                countxyz=0
-                countx=0
-                county=0
-                countz=0
-                for ejemplo in range(lendata):
-                    if (data[a][ejemplo]==x) and (data[b][ejemplo]==y) and (data[c][ejemplo]==z):
-                        countxyz+=1
-                    if data[c][ejemplo]==z:
-                        countz+=1
-                    if (data[a][ejemplo]==x) and (data[c][ejemplo]==z):
-                        countx+=1
-                    if (data[b][ejemplo]==y) and (data[c][ejemplo]==z):
-                        county+=1  
-
+                countxyz=((data[a]==x) & (data[b]==y) & (data[c]==z)).sum()
+                countz=(data[c]==z).sum()
+                countx=((data[a]==x) & (data[c]==z)).sum()
+                county=((data[b]==y) & (data[c]==z)).sum()
                 pxyz=countxyz/lendata
                 pz=countz/lendata 
                 pxz=countx/lendata
                 pyz=county/lendata    
-                
                 if pxyz>0 and pz>0 and pxz>0 and pyz>0:
                     aux=(pxyz)/(((pxz*pyz)/pz))
                     xyz=pxyz*math.log(aux)
@@ -87,26 +75,14 @@ def conditional_mutual_info2(a,b,c,d):
         for y in vb:
             for z in vc:
                 for w in vd:
-                
-                    countxyzw=0
-                    countx=0
-                    county=0
-                    countz=0
-                    for ejemplo in range(lendata):
-                        if (data[a][ejemplo]==x) and (data[b][ejemplo]==y) and (data[c][ejemplo]==z) and (data[d][ejemplo]==w):
-                            countxyzw+=1
-                        if data[c][ejemplo] and data[d][ejemplo]==z:
-                            countz+=1
-                        if (data[a][ejemplo]==x) and (data[c][ejemplo] and data[d][ejemplo]==z):
-                            countx+=1
-                        if (data[b][ejemplo]==y) and (data[c][ejemplo]==z) and data[d][ejemplo]:
-                            county+=1  
-
+                    countxyzw=((data[a]==x) & (data[b]==y) & (data[c]==z) & (data[d]==w)).sum()
+                    countz=((data[c]==z) & (data[d]==w)).sum()
+                    countx=((data[a]==x) & (data[c]==z) & (data[d]==w)).sum()
+                    county=((data[b]==x) & (data[c]==z) & (data[d]==w)).sum()
                     pxyz=countxyzw/lendata
                     pz=countz/lendata 
                     pxz=countx/lendata
                     pyz=county/lendata    
-                    
                     if pxyz>0 and pz>0 and pxz>0 and pyz>0:
                         aux=(pxyz)/(((pxz*pyz)/pz))
                         xyz=pxyz*math.log(aux)
@@ -119,13 +95,16 @@ combinaciones2=list(combinations(names,2)) #combinacion de dos atributos
 combinaciones=[]
 atributos=[]
 for combinacion in combinaciones2:
-    i=mutual_info_score(data[combinacion[0]],data[combinacion[1]])
+    i=mutual_info(combinacion[0],combinacion[1])
     t=2*lendata*i
     if t >= 3.841:
         print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+        bn.addArc(combinacion[0],combinacion[1])
         combinaciones.append(combinacion)
         atributos.append(combinacion[0])
         atributos.append(combinacion[1])
+
+print(bn)
 
 atributos=list(set(atributos))
 
@@ -139,9 +118,11 @@ for combinacion in combinaciones:
             t=2*lendata*i
             if t < 5.991:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+                bn.eraseArc(combinacion[0],combinacion[1])
                 combinacioneseliminadas.append(combinacion)
             elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
                 print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+                bn.addArc(combinacion[0],combinacion[1])
                 combinaciones3.append(combinacion)
                 atributos2.append(combinacion[0])
                 atributos2.append(combinacion[1])
@@ -152,9 +133,9 @@ for combinacion in combinaciones:
 
 combinaciones3=list(set(combinaciones3))
 atributos2=list(set(atributos2))
-#print(atributos2)
 
-combinaciones4=list(combinations(atributos2,2))
+combinaciones4=list(combinations(atributos2,2)) #combinaciones de 2 atributos con dos condicionales
+combinacioneseliminadas=[]
 for combinacion in combinaciones3:
     for combi in combinaciones4:
         if not (combi[0] in combinacion) and not (combi[1] in combinacion):
@@ -162,7 +143,14 @@ for combinacion in combinaciones3:
             t=2*lendata*i
             if t < 7.815:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-            
+                bn.addArc(combinacion[0],combinacion[1])
+                combinacioneseliminadas.append(combinacion)
+            elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
+                print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+                bn.addArc(combinacion[0],combinacion[1])
+            #else: # si no hay que desconectar o reconectar solo lo agrega a la lista
+
+print(bn)            
 print("\nEl tiempo de ejecución es:")
 fin=time.time()
 print(fin-inicio)
