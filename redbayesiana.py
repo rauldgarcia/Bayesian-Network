@@ -4,13 +4,15 @@ import math
 import time
 from itertools import combinations
 from sklearn.metrics import mutual_info_score
+import copy
 inicio=time.time()
 
-data=pd.read_csv('prueba.csv')
+data=pd.read_csv('discretizadairis.csv')
 print(data)
 print(data.dtypes)
 lendata=len(data)
-names=data.columns.values
+nombres=data.columns.values 
+names=np.delete(nombres,-1) #eliminar esta linea y cambiar nombres a names si se utiliza la clase
 print(names)
 natributos=len(names)
 print(natributos)
@@ -76,10 +78,10 @@ def conditional_mutual_info(a,b,c):
     return i
 
 def conditional_mutual_info2(a,b,c,d):
-    va=list(set(list(data[names[a]])))
-    vb=list(set(list(data[names[b]])))
-    vc=list(set(list(data[names[c]])))
-    vd=list(set(list(data[names[d]])))
+    va=list(set(list(data[a])))
+    vb=list(set(list(data[b])))
+    vc=list(set(list(data[c])))
+    vd=list(set(list(data[d])))
     i=0
     for x in va:
         for y in vb:
@@ -91,13 +93,13 @@ def conditional_mutual_info2(a,b,c,d):
                     county=0
                     countz=0
                     for ejemplo in range(lendata):
-                        if (data[names[a]][ejemplo]==x) and (data[names[b]][ejemplo]==y) and (data[names[c]][ejemplo]==z) and (data[names[d]][ejemplo]==w):
+                        if (data[a][ejemplo]==x) and (data[b][ejemplo]==y) and (data[c][ejemplo]==z) and (data[d][ejemplo]==w):
                             countxyzw+=1
-                        if data[names[c]][ejemplo] and data[names[d]][ejemplo]==z:
+                        if data[c][ejemplo] and data[d][ejemplo]==z:
                             countz+=1
-                        if (data[names[a]][ejemplo]==x) and (data[names[c]][ejemplo] and data[names[d]][ejemplo]==z):
+                        if (data[a][ejemplo]==x) and (data[c][ejemplo] and data[d][ejemplo]==z):
                             countx+=1
-                        if (data[names[b]][ejemplo]==y) and (data[names[c]][ejemplo]==z) and data[names[d]][ejemplo]:
+                        if (data[b][ejemplo]==y) and (data[c][ejemplo]==z) and data[d][ejemplo]:
                             county+=1  
 
                     pxyz=countxyzw/lendata
@@ -112,9 +114,6 @@ def conditional_mutual_info2(a,b,c,d):
                 
     return i
 
-#print(mutual_info(0,1))
-#print(mutual_info_score(data[names[0]],data[names[1]]))
-
 combinaciones2=list(combinations(names,2)) #combinacion de dos atributos
 
 combinaciones=[]
@@ -128,10 +127,11 @@ for combinacion in combinaciones2:
         atributos.append(combinacion[0])
         atributos.append(combinacion[1])
 
-#print(combinaciones)
 atributos=list(set(atributos))
-#print(atributos)
 
+combinaciones3=[] #combinaciones de 2 atributos con un condicional
+combinacioneseliminadas=[]
+atributos2=[]
 for combinacion in combinaciones:
     for atributo in atributos:
         if not (atributo in combinacion):
@@ -139,30 +139,30 @@ for combinacion in combinaciones:
             t=2*lendata*i
             if t < 5.991:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+                combinacioneseliminadas.append(combinacion)
+            elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
+                print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+                combinaciones3.append(combinacion)
+                atributos2.append(combinacion[0])
+                atributos2.append(combinacion[1])
+            else: # si no hay que desconectar o reconectar solo lo agrega a la lista
+                combinaciones3.append(combinacion)
+                atributos2.append(combinacion[0])
+                atributos2.append(combinacion[1])
 
+combinaciones3=list(set(combinaciones3))
+atributos2=list(set(atributos2))
+#print(atributos2)
 
-"""print()
-print(conditional_mutual_info(0,1,2))
-#print(conditional_mutual_info(0,1,3))
-print(conditional_mutual_info(0,2,1))
-#print(conditional_mutual_info(0,2,3))
-#print(conditional_mutual_info(0,3,1))
-#print(conditional_mutual_info(0,3,2))
-print(conditional_mutual_info(1,2,0))
-#print(conditional_mutual_info(1,2,3))
-#print(conditional_mutual_info(1,3,0))
-#print(conditional_mutual_info(1,3,2))
-#print(conditional_mutual_info(2,3,0))
-#print(conditional_mutual_info(2,3,1))"""
-
-"""print()
-print(conditional_mutual_info2(0,1,2,3))
-print(conditional_mutual_info2(0,2,1,3))
-print(conditional_mutual_info2(0,3,1,2))
-print(conditional_mutual_info2(1,2,0,3))
-print(conditional_mutual_info2(1,3,0,2))
-print(conditional_mutual_info2(2,3,0,1))"""
-
+combinaciones4=list(combinations(atributos2,2))
+for combinacion in combinaciones3:
+    for combi in combinaciones4:
+        if not (combi[0] in combinacion) and not (combi[1] in combinacion):
+            i=conditional_mutual_info2(combinacion[0],combinacion[1],combi[0],combi[1])
+            t=2*lendata*i
+            if t < 7.815:
+                print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+            
 print("\nEl tiempo de ejecución es:")
 fin=time.time()
 print(fin-inicio)
