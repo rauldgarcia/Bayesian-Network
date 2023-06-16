@@ -116,12 +116,12 @@ for combinacion in combinaciones:
         if not (atributo in combinacion):
             i=conditional_mutual_info(combinacion[0],combinacion[1],atributo)
             t=2*lendata*i
-            if t < 5.991:
+            if t < 5.991 and not combinacion in combinacioneseliminadas:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if bn.existsArc(combinacion[0],combinacion[1]):
                     bn.eraseArc(combinacion[0],combinacion[1])
                 combinacioneseliminadas.append(combinacion)
-            elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
+            elif (combinacion in combinacioneseliminadas) and not (combinacion in combinaciones3): #si adelante sale que tiene que ir conectada la vuelve a conectar
                 print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if not bn.existsArc(combinacion[0],combinacion[1]):
                     bn.addArc(combinacion[0],combinacion[1])
@@ -133,8 +133,10 @@ for combinacion in combinaciones:
                 atributos2.append(combinacion[0])
                 atributos2.append(combinacion[1])
 
+print(bn)
 combinaciones3=list(set(combinaciones3))
 atributos2=list(set(atributos2))
+combinaciones5=[]
 
 combinaciones4=list(combinations(atributos2,2)) #combinaciones de 2 atributos con dos condicionales
 combinacioneseliminadas=[]
@@ -143,15 +145,16 @@ for combinacion in combinaciones3:
         if not (combi[0] in combinacion) and not (combi[1] in combinacion):
             i=conditional_mutual_info2(combinacion[0],combinacion[1],combi[0],combi[1])
             t=2*lendata*i
-            if t < 7.815:
+            if t < 7.815 and not combinacion in combinacioneseliminadas:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if bn.existsArc(combinacion[0],combinacion[1]):
                     bn.eraseArc(combinacion[0],combinacion[1])
                 combinacioneseliminadas.append(combinacion)
-            elif combinacion in combinacioneseliminadas: #si adelante sale que tiene que ir conectada la vuelve a conectar
+            elif (combinacion in combinacioneseliminadas) and not (combinacion in combinaciones5): #si adelante sale que tiene que ir conectada la vuelve a conectar
                 print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if not bn.existsArc(combinacion[0],combinacion[1]):
                     bn.addArc(combinacion[0],combinacion[1])
+                combinaciones5.append(combinacion)
                 
             #else: # si no hay que desconectar o reconectar solo lo agrega a la lista
 #import pyAgrum.lib.notebook
