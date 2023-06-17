@@ -4,8 +4,46 @@ import math
 import time
 from itertools import combinations
 import pyAgrum as gum
-#import pyAgrum.lib.notebook as gnb
+
 inicio=time.time()
+
+alpha={1 : 3.841,
+       2 : 5.991,
+       3 : 7.815,
+       4 : 9.488,
+       5 : 11.070,
+       6 : 12.592,
+       7 : 14.067,
+       8 : 15.507,
+       9 : 16.919,
+       10 : 18.307,
+       11 : 19.675,
+       12 : 21.026,
+       13 : 22.362,
+       14 : 23.685,
+       15 : 24.996,
+       16 : 26.296,
+       17 : 27.587,
+       18 : 28.869,
+       19 : 30.144,
+       20 : 31.410,
+       21 : 32.671,
+       22 : 33.924,
+       23 : 35.172,
+       24 : 36.415,
+       25 : 37.652,
+       26 : 38.885,
+       27 : 40.113,
+       28 : 41.337,
+       29 : 42.557,
+       30 : 43.773,
+       40 : 55.758,
+       50 : 67.505,
+       60 : 79.082,
+       70 : 90.531,
+       80 : 101.879,
+       90 : 113.145,
+       100 : 124.342}
 
 data=pd.read_csv('discretizadairis.csv')
 print(data)
@@ -97,7 +135,26 @@ atributos=[]
 for combinacion in combinaciones2:
     i=mutual_info(combinacion[0],combinacion[1])
     t=2*lendata*i
-    if t >= 3.841:
+    df=(len(list(set(list(data[combinacion[0]]))))-1)*(len(list(set(list(data[combinacion[1]]))))-1)
+    if df<=30:
+        sl=alpha[df]
+    elif df>30 and df <=40:
+        sl=alpha[30]
+    elif df>40 and df <=50:
+        sl=alpha[40]
+    elif df>50 and df <=60:
+        sl=alpha[50]
+    elif df>60 and df <=70:
+        sl=alpha[60]
+    elif df>70 and df <=80:
+        sl=alpha[70]
+    elif df>80 and df <=90:
+        sl=alpha[80]
+    elif df>90 and df <=100:
+        sl=alpha[90]
+    else:
+        sl=alpha[100]    
+    if t >= sl:
         print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
         bn.addArc(combinacion[0],combinacion[1])
         combinaciones.append(combinacion)
@@ -116,7 +173,27 @@ for combinacion in combinaciones:
         if not (atributo in combinacion):
             i=conditional_mutual_info(combinacion[0],combinacion[1],atributo)
             t=2*lendata*i
-            if t < 5.991 and not combinacion in combinacioneseliminadas:
+            df=(len(list(set(list(data[combinacion[0]]))))-1)*(len(list(set(list(data[combinacion[1]]))))-1)*(len(list(set(list(data[atributo])))))
+            if df<=30:
+                sl=alpha[df]
+            elif df>30 and df <=40:
+                sl=alpha[30]
+            elif df>40 and df <=50:
+                sl=alpha[40]
+            elif df>50 and df <=60:
+                sl=alpha[50]
+            elif df>60 and df <=70:
+                sl=alpha[60]
+            elif df>70 and df <=80:
+                sl=alpha[70]
+            elif df>80 and df <=90:
+                sl=alpha[80]
+            elif df>90 and df <=100:
+                sl=alpha[90]
+            else:
+                sl=alpha[100] 
+
+            if t < sl and not combinacion in combinacioneseliminadas:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if bn.existsArc(combinacion[0],combinacion[1]):
                     bn.eraseArc(combinacion[0],combinacion[1])
@@ -145,7 +222,28 @@ for combinacion in combinaciones3:
         if not (combi[0] in combinacion) and not (combi[1] in combinacion):
             i=conditional_mutual_info2(combinacion[0],combinacion[1],combi[0],combi[1])
             t=2*lendata*i
-            if t < 7.815 and not combinacion in combinacioneseliminadas:
+
+            df=(len(list(set(list(data[combinacion[0]]))))-1)*(len(list(set(list(data[combinacion[1]]))))-1)*(len(list(set(list(data[combi[0]])))))*(len(list(set(list(data[combi[1]])))))
+            if df<=30:
+                sl=alpha[df]
+            elif df>30 and df <=40:
+                sl=alpha[30]
+            elif df>40 and df <=50:
+                sl=alpha[40]
+            elif df>50 and df <=60:
+                sl=alpha[50]
+            elif df>60 and df <=70:
+                sl=alpha[60]
+            elif df>70 and df <=80:
+                sl=alpha[70]
+            elif df>80 and df <=90:
+                sl=alpha[80]
+            elif df>90 and df <=100:
+                sl=alpha[90]
+            else:
+                sl=alpha[100]    
+
+            if t < sl and not combinacion in combinacioneseliminadas:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if bn.existsArc(combinacion[0],combinacion[1]):
                     bn.eraseArc(combinacion[0],combinacion[1])
@@ -163,3 +261,6 @@ for combinacion in combinaciones3:
 print("\nEl tiempo de ejecución es:")
 fin=time.time()
 print(fin-inicio)
+
+
+#agregar calculo de grados de libertad y tabla
