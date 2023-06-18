@@ -3,7 +3,7 @@ import pandas as pd
 import math
 import time
 from itertools import combinations
-import pyAgrum as gum
+#import pyAgrum as gum
 
 inicio=time.time()
 
@@ -45,23 +45,15 @@ alpha={1 : 3.841,
        90 : 113.145,
        100 : 124.342}
 
-data=pd.read_csv('discretizadairis.csv')
+data=pd.read_csv('discretizadaCAIMwine.csv')
 print(data)
 print(data.dtypes)
 lendata=len(data)
 names=data.columns.values 
-#names=np.delete(nombres,-1) #eliminar esta linea y cambiar nombres a names si se utiliza la clase
 print(names)
 natributos=len(names)
-print(natributos)
 print()
 
-bn=gum.BayesNet()
-for name in names: #agrega cada atributo a la red bayesiana y especifica el numero de valores que toma ese atributo
-    tamaño=len(list(set(list(data[name]))))
-    name=bn.add(gum.LabelizedVariable(name,name+'1',tamaño))
-
-print(bn)
 def mutual_info(a,b):
     va=list(set(list(data[a])))
     vb=list(set(list(data[b])))
@@ -130,8 +122,13 @@ def conditional_mutual_info2(a,b,c,d):
 
 combinaciones2=list(combinations(names,2)) #combinacion de dos atributos
 
+print("Total de combinaciones:")
+print(len(combinaciones2))
+print("Total de atributos:")
+print(natributos)
 combinaciones=[]
 atributos=[]
+print("Calculando información mutua")
 for combinacion in combinaciones2:
     i=mutual_info(combinacion[0],combinacion[1])
     t=2*lendata*i
@@ -155,20 +152,23 @@ for combinacion in combinaciones2:
     else:
         sl=alpha[100]    
     if t >= sl:
-        print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-        bn.addArc(combinacion[0],combinacion[1])
+        #print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
         combinaciones.append(combinacion)
         atributos.append(combinacion[0])
         atributos.append(combinacion[1])
 
-print(bn)
-
 atributos=list(set(atributos))
+print("Combinaciones:")
+print(len(combinaciones))
+print("Atributos:")
+print(len(atributos))
+print("\nCalculando información mutua condicional")
 
 combinaciones3=[] #combinaciones de 2 atributos con un condicional
-combinacioneseliminadas=[]
 atributos2=[]
 for combinacion in combinaciones:
+    contsi=1
+    contno=0
     for atributo in atributos:
         if not (atributo in combinacion):
             i=conditional_mutual_info(combinacion[0],combinacion[1],atributo)
@@ -193,31 +193,30 @@ for combinacion in combinaciones:
             else:
                 sl=alpha[100] 
 
-            if t < sl and not combinacion in combinacioneseliminadas:
-                print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-                if bn.existsArc(combinacion[0],combinacion[1]):
-                    bn.eraseArc(combinacion[0],combinacion[1])
-                combinacioneseliminadas.append(combinacion)
-            elif (combinacion in combinacioneseliminadas) and not (combinacion in combinaciones3): #si adelante sale que tiene que ir conectada la vuelve a conectar
-                print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
-                if not bn.existsArc(combinacion[0],combinacion[1]):
-                    bn.addArc(combinacion[0],combinacion[1])
-                combinaciones3.append(combinacion)
-                atributos2.append(combinacion[0])
-                atributos2.append(combinacion[1])
-            else: # si no hay que desconectar o reconectar solo lo agrega a la lista
-                combinaciones3.append(combinacion)
-                atributos2.append(combinacion[0])
-                atributos2.append(combinacion[1])
+            if t >= sl:
+                contsi+=1
+            else:
+                contno+=1
 
-print(bn)
-combinaciones3=list(set(combinaciones3))
+    if contsi>=contno:
+        #print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+    #else:
+        combinaciones3.append(combinacion)
+        atributos2.append(combinacion[0])
+        atributos2.append(combinacion[1])
+
 atributos2=list(set(atributos2))
-combinaciones5=[]
+print("Combinaciones:")
+print(len(combinaciones3))
+print("Atributos:")
+print(len(atributos2))
+print("\nCalculando información mutua condicional con dos atributos")
 
 combinaciones4=list(combinations(atributos2,2)) #combinaciones de 2 atributos con dos condicionales
-combinacioneseliminadas=[]
+combinaciones5=[]
 for combinacion in combinaciones3:
+    contsi=1
+    contno=0
     for combi in combinaciones4:
         if not (combi[0] in combinacion) and not (combi[1] in combinacion):
             i=conditional_mutual_info2(combinacion[0],combinacion[1],combi[0],combi[1])
@@ -243,24 +242,39 @@ for combinacion in combinaciones3:
             else:
                 sl=alpha[100]    
 
-            if t < sl and not combinacion in combinacioneseliminadas:
+            if t >= sl:
+                contsi+=1
+            else:
+                contno+=1
+
+    if contsi>=contno:
+        #print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
+    #else:
+        combinaciones5.append(combinacion)
+        #atributos2.append(combinacion[0])
+        #atributos2.append(combinacion[1])
+
+        """if t < sl and not combinacion in combinacioneseliminadas:
                 print("Desconecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if bn.existsArc(combinacion[0],combinacion[1]):
                     bn.eraseArc(combinacion[0],combinacion[1])
+                if combinacion in combinaciones5:
+                    combinaciones5.remove(combinacion)
                 combinacioneseliminadas.append(combinacion)
             elif (combinacion in combinacioneseliminadas) and not (combinacion in combinaciones5): #si adelante sale que tiene que ir conectada la vuelve a conectar
                 print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
                 if not bn.existsArc(combinacion[0],combinacion[1]):
                     bn.addArc(combinacion[0],combinacion[1])
                 combinaciones5.append(combinacion)
+                combinacioneseliminadas.remove(combinacion)
                 
-            #else: # si no hay que desconectar o reconectar solo lo agrega a la lista
-#import pyAgrum.lib.notebook
-#bn
+            #else: # si no hay que desconectar o reconectar solo lo agrega a la lista"""
+
+print(len(combinaciones5))
+print()
+for combinacion in combinaciones5:
+    print("Conecta el atributo ", combinacion[0], " con el atributo ", combinacion[1], ".")
 
 print("\nEl tiempo de ejecución es:")
 fin=time.time()
 print(fin-inicio)
-
-
-#agregar calculo de grados de libertad y tabla
